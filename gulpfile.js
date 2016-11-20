@@ -6,24 +6,14 @@ const config = {
 	distDirectory: './dist/assets'
 };
 
-config.css = {
-	mainFile: `${config.srcDirectory}/css/main.scss`,
-	allFiles: `${config.srcDirectory}/css/**/*.scss`,
-	dist: `${config.distDirectory}/css`
-}
-
-
-
-
-
-
-
-
 
 
 /* *************
 	CSS
 ************* */
+
+const sassFiles = `${config.srcDirectory}/css/**/*.scss`;
+const sassMainFile = `${config.srcDirectory}/css/main.scss`;
 
 gulp.task('css', function() {
 
@@ -59,7 +49,7 @@ gulp.task('css', function() {
 		} )
 	];
 
-	gulp.src(config.css.mainFile)
+	gulp.src(sassMainFile)
 		.pipe(
 			postcss(postcssProcessors, {syntax: scss})
 			.on('error', gutil.log)
@@ -68,7 +58,7 @@ gulp.task('css', function() {
 			sass({ outputStyle: 'compressed' })
 			.on('error', gutil.log)
 		)
-		.pipe(gulp.dest(config.css.dist));
+		.pipe(gulp.dest(`${config.distDirectory}/css`));
 });
 
 
@@ -78,13 +68,14 @@ gulp.task('css', function() {
 	JS
 ************* */
 
-const concat = require('gulp-concat'),
-	  uglify = require('gulp-uglifyjs'),
-	  babel = require('gulp-babel');
-
 const jsFiles = 'src/js/**/*.js';
 
 gulp.task('js', function() {
+
+	const concat = require('gulp-concat'),
+		  uglify = require('gulp-uglifyjs'),
+		  babel = require('gulp-babel');
+
 	gulp.src(jsFiles)
 		.pipe(
 			babel({ presets: ['es2015'] })
@@ -97,30 +88,28 @@ gulp.task('js', function() {
 
 
 // LINTING
+gulp.task('js-lint', function() {
 
-const eslint = require('gulp-eslint');
+	const eslint = require('gulp-eslint');
 
-gulp.task('lint', function() {
 	return gulp.src(jsFiles)
 		.pipe(eslint())
-
 		.pipe(eslint.format())
-
 		.pipe(eslint.failOnError());
 });
 
-// // TESTING
+// TESTING
+gulp.task('js-tests', function() {
 
-// const jasmine = require('gulp-jasmine-phantom');
-// const testFile = 'src/js/tests/test.js';
+	const jasmine = require('gulp-jasmine-phantom');
+	const testFile = 'src/js/tests/test.js';
 
-// gulp.task('tests', function() {
-// 	gulp.src(testFile)
-// 		.pipe(jasmine({
-// 			integration: true,
-// 			vendor: jsFiles
-// 		}));
-// });
+	gulp.src(testFile)
+		.pipe(jasmine({
+			integration: true,
+			vendor: jsFiles
+		}));
+});
 
 
 
@@ -128,28 +117,33 @@ gulp.task('lint', function() {
 	HTML
 ************* */
 
-const minifyHTML = require('gulp-minify-html');
+const htmlFiles = 'src/**/*.html';
 
-const htmlFiles = 'src/html/**/*.html';
+gulp.task('html', function() {
 
-gulp.task('minify-html', function() {
+	const minifyHTML = require('gulp-minify-html');	
+
 	return gulp.src(htmlFiles)
 		.pipe(minifyHTML({ empty: true }))
 		.pipe(gulp.dest('dist'));
 });
 
 
+
 /* *************
 	Images
 ************* */
 
-const imagemin = require('gulp-imagemin');
+const imageFiles = 'src/images/**/*.*'
 
-gulp.task('images', () =>
-    gulp.src('src/images/*')
+gulp.task('images', function() {
+
+	const imagemin = require('gulp-imagemin');
+
+	gulp.src(imageFiles)
         .pipe(imagemin())
         .pipe(gulp.dest('dist/assets/images'))
-);
+});
 
 
 
@@ -158,26 +152,26 @@ gulp.task('images', () =>
 	SERVER
 ************* */
 
-// const connect = require('gulp-connect');
+gulp.task('connect', function() {
 
-// gulp.task('images', function() {
-// 	connect.server({
-// 		port: 8000
-// 	});
-// });
+	const connect = require('gulp-connect');
 
-// // OR
+	connect.server({
+		port: 8000
+	});
+});
 
-// const browserSync = require('browser-sync');
+// OR
 
-// gulp.task('connectWithBrowserSync', function() {
+gulp.task('connectWithBrowserSync', function() {
 
-// 	browserSync.create();
-// 	browserSync.init({
-// 		server: './dist'
-// 	});
+	const browserSync = require('browser-sync');
 
-// });
+	browserSync.create();
+	browserSync.init({
+		server: './dist'
+	});
+});
 
 
 
@@ -190,8 +184,10 @@ gulp.task('images', () =>
 ************* */
 
 gulp.task('watch', function() {
-	gulp.watch(sassFiles,['css']).on('change', browserSync.reload); 
-	gulp.watch(jsFiles,['js', 'lint']); 
+	gulp.watch(sassFiles,['css']); 
+	gulp.watch(jsFiles,['js']); 
+	gulp.watch(htmlFiles,['html']); 
+	gulp.watch(imageFiles,['images']); 
 });
 
 
